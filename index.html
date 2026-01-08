@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Study Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; }
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 30px;
+    }
+    .card {
+      background: #1e1e2f;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+      color: #ffb3ff;
+    }
+    .subtitle {
+      color: #bdbdff;
+      margin-bottom: 25px;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    button {
+      background: linear-gradient(135deg, #ff4ecd, #6a5bff);
+      border: none;
+      color: white;
+      padding: 14px 30px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    button:hover { transform: scale(1.05); }
+    .options button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      background: #2e2e48;
+    }
+    .options button.selected { background: #9b5cff; }
+    .progress {
+      height: 10px;
+      background: #333;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress div {
+      height: 100%;
+      background: linear-gradient(90deg, #ff4ecd, #6a5bff);
+      width: 0%;
+    }
+    .bar {
+      background: #333;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+    .bar div {
+      height: 14px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #ff4ecd, #6a5bff);
+    }
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #ccc;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container"><div class="card" id="start">
+  <h1>Mind Scope</h1>
+  <p class="subtitle">قبل از تغییر، روش ذهنت را بشناس<br>تحلیل رفتاری ـ شناختی برای یادگیری بهتر<br>بر پایه الگوی تصمیم‌گیری و واکنش ذهنی</p>
+  <input id="name" placeholder="نام و نام خانوادگی" />
+  <button onclick="startTest()">شروع کن</button>
+</div>
+
+<div class="card" id="quiz" style="display:none">
+  <div class="progress"><div id="prog"></div></div>
+  <h2 id="qText"></h2>
+  <div class="options" id="opts"></div>
+</div>
+
+<div class="card" id="result" style="display:none"></div>
+
+<footer> Mind scope , Created by Baran Khaleghi
+</footer>
+
+  </div><script>
+const questions = [
+  {q:"وقتی شروع به درس می‌کنی معمولاً…", o:["سریع تمرکز می‌گیرم","بعد از مدتی تمرکز می‌کنم","خیلی سخت تمرکز می‌کنم","اصلاً تمرکز ندارم"], s:[3,2,1,0]},
+  {q:"بیشتر چه زمانی درس می‌خوانی؟", o:["صبح","ظهر","شب","نامنظم"], s:[3,2,2,0]},
+  {q:"وقتی مطلبی سخت است…", o:["تحلیلش می‌کنم","چندبار می‌خوانم","می‌پیچونم","کلافه می‌شوم"], s:[3,2,0,0]},
+  {q:"برنامه‌ریزی درسی تو…", o:["دقیق و منظم","نسبتاً منظم","شلخته","ندارم"], s:[3,2,1,0]},
+  {q:"موقع امتحان…", o:["آرامم","کمی استرس","استرس زیاد","قفل می‌کنم"], s:[3,2,1,0]},
+  {q:"یادگیری گروهی؟", o:["عالی","بد نیست","فرقی نداره","دوست ندارم"], s:[3,2,1,0]},
+  {q:"مرور درس؟", o:["منظم","گاهی","کم","هیچ‌وقت"], s:[3,2,1,0]},
+  {q:"حواست با گوشی؟", o:["کنترل‌شده","گاهی","زیاد","فاجعه"], s:[3,2,1,0]},
+  {q:"هدف درسی داری؟", o:["کاملاً مشخص","نسبتاً","مبهم","نه"], s:[3,2,1,0]},
+  {q:"انگیزه‌ات؟", o:["بالا","متوسط","کم","تقریباً صفر"], s:[3,2,1,0]},
+  {q:"وقتی عقب می‌افتی…", o:["جبران می‌کنم","استرس می‌گیرم","رها می‌کنم","بی‌خیال"], s:[3,2,1,0]},
+  {q:"درک مفاهیم؟", o:["عمیق","خوب","سطحی","ضعیف"], s:[3,2,1,0]},
+  {q:"یادداشت‌برداری؟", o:["حرفه‌ای","معمولی","کم","هیچی"], s:[3,2,1,0]},
+  {q:"مرور شب امتحان؟", o:["فقط جمع‌بندی","مرور کامل","استرس","خراب"], s:[3,2,1,0]},
+  {q:"حافظه؟", o:["قوی","خوب","متوسط","ضعیف"], s:[3,2,1,0]},
+  {q:"تمرکز پیوسته؟", o:[">40 دقیقه","20–40","کمتر","تقریباً صفر"], s:[3,2,1,0]},
+  {q:"یادگیری دیداری؟", o:["عالی","خوب","معمولی","ضعیف"], s:[3,2,1,0]},
+  {q:"یادگیری شنیداری؟", o:["عالی","خوب","معمولی","ضعیف"], s:[3,2,1,0]},
+  {q:"حل مسئله؟", o:["دوست دارم","اوکی","سخته","فرار می‌کنم"], s:[3,2,1,0]},
+  {q:"مطالعه طولانی؟", o:["دوست دارم","تحمل می‌کنم","سخته","غیرممکن"], s:[3,2,1,0]},
+  {q:"بازدهی روزانه؟", o:["بالا","متوسط","کم","خیلی کم"], s:[3,2,1,0]},
+  {q:"مدیریت زمان؟", o:["عالی","خوب","ضعیف","افتضاح"], s:[3,2,1,0]},
+  {q:"وقتی خسته‌ای…", o:["استراحت هدفمند","ادامه میدم","ول می‌کنم","کلافه"], s:[3,2,1,0]},
+  {q:"اعتماد به خودت؟", o:["بالا","متوسط","کم","خیلی کم"], s:[3,2,1,0]}
+];
+
+let i=0, score=0, name="";
+
+function startTest(){
+  name=document.getElementById('name').value.trim();
+  if(!name) return alert('نام را وارد کن');
+  document.getElementById('start').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  showQ();
+}
+
+function showQ(){
+  const q=questions[i];
+  document.getElementById('qText').innerText=q.q;
+  const o=document.getElementById('opts');
+  o.innerHTML='';
+  q.o.forEach((t,idx)=>{
+    const b=document.createElement('button');
+    b.innerText=t;
+    b.onclick=()=>select(idx,b);
+    o.appendChild(b);
+  });
+  document.getElementById('prog').style.width=((i/questions.length)*100)+'%';
+}
+
+function select(idx,btn){
+  score+=questions[i].s[idx];
+  i++;
+  if(i<questions.length) showQ();
+  else finish();
+}
+
+function finish(){
+  document.getElementById('quiz').style.display='none';
+  const r=document.getElementById('result');
+  r.style.display='block';
+
+  let level="";
+  if(score>60) level="یادگیرنده پیشرفته";
+  else if(score>40) level="یادگیرنده متوسط";
+  else level="نیازمند بازسازی اساسی";
+
+  r.innerHTML=`
+  <h2>تحلیل شخصی‌سازی‌شده ${name}</h2>
+  <p><b>تیپ تحصیلی:</b> ${level}</p>
+
+  <h3>نقاط قوت</h3>
+  <p>${score>50?'تمرکز، درک مفاهیم، مدیریت زمان':'برخی مهارت‌های پایه'}</p>
+
+  <h3>نقاط قابل بهبود</h3>
+  <p>${score<50?'تمرکز، برنامه‌ریزی، ثبات ذهنی':'بهینه‌سازی عملکرد'}</p>
+
+  <h3>پیشنهاد مشاور تحصیلی در صورت داشتن نیاز </h3>
+  <p>بر اساس پاسخ‌ها , زمان توانمندی درک و مفهوم درس‌های عمومی و اختصاصی خود را پیدا کنی و بر همان اساس برنامه‌ریزی کنی
+
+<h3>1️⃣ خودشناسی (۷ روز)</h3>
+<p>قبل از هر برنامه‌ریزی، باید خودتو بشناسی 🤓<br>
+هر روز ۳ دقیقه بنویس: تایم تمرکزت کیه؟ کی حواست پرت میشه؟ کی خسته میشی؟<br>
+چه کاری باعث شد تمرکزت بهتر بشه؟<br>
+بعد ۷ روز می‌فهمی تایم طلایی مغزت کیه، صبحی یا شبی، تمرکزت سریع می‌ریزه یا دیر.</p>
+
+2️⃣ تمرین تمرکز پایه</h3>
+<p> پنج دقیقه فقط به نفس کشیدنت توجه کن 🧘‍♀️<br>
+هر فکری اومد، فقط بگو «اوکی» و برگرد به نفس<br>
+ این تمرین مغز رو تربیت می‌کنه که حواسش پرت شد، دوباره برگرده.همینطور پیدایش یک وسیله و تمرکز روی ان در مکانی شلوغ و بهم ریخته نیز موثر است</p>
+
+<h3>3️⃣ تمرین دیداری</h3>
+<p>متن بخون و فقط روی خطی که می‌خونی تمرکز کن 👀<br>
+هر پاراگراف رو به نقشه ذهنی یا شکل تبدیل کن ✏️<br>
+مغز تصویر رو خیلی بهتر از متن نگه می‌داره.</p>
+
+<h3>4️⃣ تمرین شنیداری</h3>
+<p>بعد از درس، با صدای بلند برای خودت توضیح بده 🎤<br>
+یا ضبط کن و شب گوش بده 🎧<br>
+اگر نتونی توضیح بدی، یعنی هنوز نفهمیدی.</p>
+
+<h3>5️⃣ یادگیری ترکیبی</h3>
+<p>بخون (دیداری) + توضیح بده (شنیداری) + بنویس (حرکتی) ✍️<br>
+این چرخه باعث یادگیری عمیق و تثبیت اطلاعات میشه 🔥</p>
+
+<h3>6️⃣ خواب و بیداری</h3>
+<p>یه بازه ثابت انتخاب کن (مثلاً ۲۳ تا ۷) 😴<br>
+مغز عاشق ثباته، نه سخت‌گیری<br> 
+نه شب‌بیداری افراطی، نه زورکی صبح زود</p>
+
+<h3>7️⃣ برنامه‌ریزی ساده</h3>
+<p>(بازه زمانی مشخص).بلاک کوتاه 20–25 دقیقه درس️<br>
+بعدش استراحت 5 دقیقه 🛌<br>
+حداکثر ۴ بلاک پشت سر هم<br>
+کیفیت > کمیت همیشه ✅</p>
+
+<h3>8️⃣ پیدا کردن نقاط قوت و ضعف</h3>
+<p>برای هر درس 0–10 نمره بده: فهم / تمرکز / علاقه / نتیجه 📊<br>
+علاقه پایین ولی نتیجه خوب → باهوشی 🤯<br>
+علاقه بالا ولی نتیجه پایین → روش غلطه ⚠️</p>
+
+<h3>9️⃣ کار روی ضعف‌ها</h3>
+<p>تمرکز کم → بلاک کوتاه‌تر 🧩<br>
+حوصله کم → یادگیری تصویری 🖼️<br>
+استرس → تست بدون نمره 💡<br>
+هدف اینه که ضعف‌ها رو مدیریت کنی، نه حذفشون ❌</p>
+
+<h3>🔑 جمع‌بندی</h3>
+<p>خودتو بشناس 🌟، برنامه خودبه‌خود درست میشه 📝<br>
+تمرکزت تمرین میشه 💪، استرس کنترل‌پذیر میشه 😌<br>
+"با تمرین دیداری، شنیداری و ترکیبی، یادگیریت عمیق میشه.</p>
+
+  <h3>نمودار عملکرد</h3>
+  <div class="bar"><div style="width:${Math.min(score,72)/72*100}%"></div></div>
+  <small>کم ← زیاد</small>
+  `;
+}
+</script></body>
+</html>
